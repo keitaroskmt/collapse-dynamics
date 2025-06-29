@@ -12,7 +12,7 @@ wandb/
 outputs/
 *.csv
 *.out
-jog*.sh*
+job*.sh*
 *.err
 .vscode
 Omnigrok/

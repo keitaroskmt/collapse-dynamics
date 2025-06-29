@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -q regular-mig
+#PBS -q regular-a
 #PBS -l select=1
 #PBS -l walltime=12:00:00
 #PBS -W group_list=gj24
