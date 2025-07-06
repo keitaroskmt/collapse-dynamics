@@ -6,7 +6,7 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+*.ipynb
 .venv
 wandb/
 outputs/

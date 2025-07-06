@@ -13,6 +13,7 @@ from torch import Tensor, nn
 from torch.nn import functional as F  # noqa: N812
 
 import wandb
+from src.information_plane.nhsic import calc_nhsic_plane
 
 
 # Dataset
@@ -119,7 +120,7 @@ def calc_accuracy_and_loss(
 
 
 @hydra.main(config_path="config", config_name="train", version_base=None)
-def main(cfg: DictConfig) -> None:
+def main(cfg: DictConfig) -> None:  # noqa: C901
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     run = wandb.init(
@@ -149,6 +150,8 @@ def main(cfg: DictConfig) -> None:
         output_size=cfg.dataset.num_classes,
         depth=cfg.depth,
     )
+    penultimate_layer = model.net[-2]  # Second to last layer
+
     with torch.no_grad():
         for param in model.parameters():
             param.data = param.data * cfg.init_scale
@@ -189,17 +192,38 @@ def main(cfg: DictConfig) -> None:
                     torch.norm(param, p=2) for param in model.parameters()
                 ).item()
                 last_layer_norm = torch.norm(model.net[-1].weight, p=2).item()
-            wandb.log(
-                {
-                    "train_accuracy": train_acc,
-                    "train_loss": train_loss,
-                    "test_accuracy": test_acc,
-                    "test_loss": test_loss,
-                    "weight_norm": weight_norm,
-                    "last_layer_norm": last_layer_norm,
-                    "time_step": time_step,
-                },
-            )
+
+                if cfg.calc_nhsic:
+                    nhsic_zx, nhsic_zy = calc_nhsic_plane(
+                        model,
+                        penultimate_layer,
+                        test_loader,
+                        cfg.dataset.num_classes,
+                        10,
+                        device,
+                    )
+                    logger.info(
+                        "nHSIC(z; x) = %.4f, nHSIC(z; y) = %.4f",
+                        nhsic_zx,
+                        nhsic_zy,
+                    )
+            wandb_log = {
+                "train_accuracy": train_acc,
+                "train_loss": train_loss,
+                "test_accuracy": test_acc,
+                "test_loss": test_loss,
+                "weight_norm": weight_norm,
+                "last_layer_norm": last_layer_norm,
+                "time_step": time_step,
+            }
+            if cfg.calc_nhsic:
+                wandb_log.update(
+                    {
+                        "nhsic_zx": nhsic_zx,
+                        "nhsic_zy": nhsic_zy,
+                    },
+                )
+            wandb.log(wandb_log)
             logger.info(
                 "Step %d: train_acc=%.4f, train_loss=%.4f, "
                 "test_acc=%.4f, test_loss=%.4f, "
