@@ -133,6 +133,8 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
     )
     logger.info("wandb run url: %s", run.get_url())
 
+    set_seed(cfg.seed)
+
     # Device
     if torch.cuda.is_available():
         device = torch.device("cuda")
