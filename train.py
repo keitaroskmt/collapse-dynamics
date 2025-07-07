@@ -14,6 +14,7 @@ from torch.nn import functional as F  # noqa: N812
 
 import wandb
 from src.information_plane.nhsic import calc_nhsic_plane
+from src.neural_collapse import NeuralCollapseValues, calc_neural_collapse_values
 
 
 # Dataset
@@ -120,7 +121,7 @@ def calc_accuracy_and_loss(
 
 
 @hydra.main(config_path="config", config_name="train", version_base=None)
-def main(cfg: DictConfig) -> None:  # noqa: C901
+def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     run = wandb.init(
@@ -193,6 +194,13 @@ def main(cfg: DictConfig) -> None:  # noqa: C901
                 ).item()
                 last_layer_norm = torch.norm(model.net[-1].weight, p=2).item()
 
+                neural_collapse_values = calc_neural_collapse_values(
+                    model,
+                    penultimate_layer,
+                    train_loader,
+                    cfg.dataset.num_classes,
+                    device,
+                )
                 if cfg.calc_nhsic:
                     nhsic_zx, nhsic_zy = calc_nhsic_plane(
                         model,
@@ -214,6 +222,10 @@ def main(cfg: DictConfig) -> None:  # noqa: C901
                 "test_loss": test_loss,
                 "weight_norm": weight_norm,
                 "last_layer_norm": last_layer_norm,
+                "nc1_score": neural_collapse_values.nc1_score,
+                "nc2_score": neural_collapse_values.nc2_score,
+                "within_class_variance": neural_collapse_values.within_class_variance,
+                "between_class_variance": neural_collapse_values.between_class_variance,
                 "time_step": time_step,
             }
             if cfg.calc_nhsic:
@@ -227,7 +239,10 @@ def main(cfg: DictConfig) -> None:  # noqa: C901
             logger.info(
                 "Step %d: train_acc=%.4f, train_loss=%.4f, "
                 "test_acc=%.4f, test_loss=%.4f, "
-                "weight_norm=%.4f, last_layer_norm=%.4f",
+                "weight_norm=%.4f, last_layer_norm=%.4f, "
+                "nc1_score=%.4f, nc2_score=%.4f, "
+                "within_class_variance=%.4f, "
+                "between_class_variance=%.4f, ",
                 time_step,
                 train_acc,
                 train_loss,
@@ -235,6 +250,10 @@ def main(cfg: DictConfig) -> None:  # noqa: C901
                 test_loss,
                 weight_norm,
                 last_layer_norm,
+                neural_collapse_values.nc1_score,
+                neural_collapse_values.nc2_score,
+                neural_collapse_values.within_class_variance,
+                neural_collapse_values.between_class_variance,
             )
             for param in optimizer.param_groups:
                 logger.info(
