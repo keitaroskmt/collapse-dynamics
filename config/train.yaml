@@ -5,6 +5,7 @@ hydra:
 defaults:
   - dataset: mnist
   - optimizer: sgd
+  - model: toy_mlp
   - _self_
 
 seed: 42
@@ -12,8 +13,6 @@ num_steps: 100000
 train_size: 1000
 batch_size: 100
 init_scale: 8.0
-depth: 3
-hidden_size: 200
 calc_nhsic: true
 calc_mi_estimation: true
 

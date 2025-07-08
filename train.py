@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torchvision
 from omegaconf import DictConfig, OmegaConf
-from torch import Tensor, nn
+from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 import wandb
@@ -19,6 +19,7 @@ from src.information_plane.mi_estimation import (
     estimate_mi_zx_cond_y,
 )
 from src.information_plane.nhsic import calc_nhsic_plane
+from src.models.toy_mlp import MLPModel
 from src.neural_collapse import calc_neural_collapse_values
 
 
@@ -57,36 +58,6 @@ def get_dataloader(
         shuffle=False,
     )
     return train_loader, test_loader
-
-
-# Model
-class MLPModel(nn.Module):
-    def __init__(
-        self,
-        input_size: int,
-        hidden_size: int,
-        output_size: int,
-        depth: int,
-        activation: str = "relu",
-    ) -> None:
-        super().__init__()
-
-        if activation == "relu":
-            self.activation = nn.ReLU()
-        else:
-            raise NotImplementedError
-
-        self.net = nn.ModuleList()
-        self.net.append(nn.Flatten())
-        self.net.extend([nn.Linear(input_size, hidden_size), self.activation])
-        for _ in range(depth - 2):
-            self.net.extend([nn.Linear(hidden_size, hidden_size), self.activation])
-        self.net.append(nn.Linear(hidden_size, output_size))
-
-    def forward(self, x: Tensor) -> Tensor:
-        for layer in self.net:
-            x = layer(x)
-        return x
 
 
 # Helper functions
@@ -152,13 +123,15 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
     train_loader, test_loader = get_dataloader(cfg)
 
     # Model
-    model = MLPModel(
-        input_size=784,
-        hidden_size=cfg.hidden_size,
-        output_size=cfg.dataset.num_classes,
-        depth=cfg.depth,
-    )
-    penultimate_layer = model.net[-2]  # Second to last layer
+    if cfg.model.name == "toy_mlp":
+        model = MLPModel(
+            input_size=784,
+            hidden_size=cfg.model.hidden_size,
+            output_size=cfg.dataset.num_classes,
+            depth=cfg.model.depth,
+            last_layer_act=cfg.model.last_layer_act,
+        )
+        penultimate_layer = model.net[-2]  # Second to last layer
 
     with torch.no_grad():
         for param in model.parameters():
