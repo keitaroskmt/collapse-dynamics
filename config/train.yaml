@@ -15,6 +15,7 @@ init_scale: 8.0
 depth: 3
 hidden_size: 200
 calc_nhsic: true
+calc_mi_estimation: true
 
 wandb:
   project: collapse_dynamics

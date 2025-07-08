@@ -13,8 +13,13 @@ from torch import Tensor, nn
 from torch.nn import functional as F  # noqa: N812
 
 import wandb
+from src.information_plane.mi_estimation import (
+    MIEstimationConfig,
+    estimate_mi_zx,
+    estimate_mi_zx_cond_y,
+)
 from src.information_plane.nhsic import calc_nhsic_plane
-from src.neural_collapse import NeuralCollapseValues, calc_neural_collapse_values
+from src.neural_collapse import calc_neural_collapse_values
 
 
 # Dataset
@@ -213,9 +218,56 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                         device,
                     )
                     logger.info(
-                        "nHSIC(z; x) = %.4f, nHSIC(z; y) = %.4f",
+                        "nHSIC(z; x): %.4f, nHSIC(z; y): %.4f",
                         nhsic_zx,
                         nhsic_zy,
+                    )
+                if cfg.calc_mi_estimation:
+                    mi_zx_estimation = estimate_mi_zx(
+                        model,
+                        penultimate_layer,
+                        test_loader,
+                        device,
+                        MIEstimationConfig(mode="mc"),
+                    )
+                    mi_zx_cond_y_estimation = estimate_mi_zx_cond_y(
+                        model,
+                        penultimate_layer,
+                        test_loader,
+                        cfg.dataset.num_classes,
+                        device,
+                        MIEstimationConfig(mode="mc"),
+                    )
+                    mi_zy_estimation = mi_zx_estimation - mi_zx_cond_y_estimation
+                    logger.info(
+                        "hat{I}(Z; X): %.4f, hat{I}(Z; Y): %.4f, hat{I}(Z; X | Y): %.4f",
+                        mi_zx_estimation,
+                        mi_zy_estimation,
+                        mi_zx_cond_y_estimation,
+                    )
+                    mi_zx_jensen_estimation = estimate_mi_zx(
+                        model,
+                        penultimate_layer,
+                        test_loader,
+                        device,
+                        MIEstimationConfig(mode="jensen"),
+                    )
+                    mi_zx_cond_y_jensen_estimation = estimate_mi_zx_cond_y(
+                        model,
+                        penultimate_layer,
+                        test_loader,
+                        cfg.dataset.num_classes,
+                        device,
+                        MIEstimationConfig(mode="jensen"),
+                    )
+                    mi_zy_jensen_estimation = (
+                        mi_zx_jensen_estimation - mi_zx_cond_y_jensen_estimation
+                    )
+                    logger.info(
+                        "check{I}(Z; X): %.4f, check{I}(Z; Y): %.4f, check{I}(Z; X | Y): %.4f",
+                        mi_zx_jensen_estimation,
+                        mi_zy_jensen_estimation,
+                        mi_zx_cond_y_jensen_estimation,
                     )
             wandb_log = {
                 "train_accuracy": train_acc,
@@ -235,6 +287,17 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                     {
                         "nhsic_zx": nhsic_zx,
                         "nhsic_zy": nhsic_zy,
+                    },
+                )
+            if cfg.calc_mi_estimation:
+                wandb_log.update(
+                    {
+                        "mi_zx_estimation": mi_zx_estimation,
+                        "mi_zy_estimation": mi_zy_estimation,
+                        "mi_zx_cond_y_estimation": mi_zx_cond_y_estimation,
+                        "mi_zx_jensen_estimation": mi_zx_jensen_estimation,
+                        "mi_zy_jensen_estimation": mi_zy_jensen_estimation,
+                        "mi_zx_cond_y_jensen_estimation": mi_zx_cond_y_jensen_estimation,
                     },
                 )
             wandb.log(wandb_log)
