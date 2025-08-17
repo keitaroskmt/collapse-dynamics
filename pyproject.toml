@@ -10,6 +10,7 @@ dependencies = [
     "matplotlib>=3.10.3",
     "pandas>=2.3.0",
     "pytest>=8.4.1",
+    "scikit-learn>=1.7.1",
     "torch>=2.7.1",
     "torchaudio>=2.7.1",
     "torchvision>=0.22.1",

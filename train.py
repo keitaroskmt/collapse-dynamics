@@ -7,57 +7,21 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
-import torchvision
 from omegaconf import DictConfig, OmegaConf
 from torch import nn
 from torch.nn import functional as F  # noqa: N812
 
 import wandb
+from src.dataset import get_dataloader
 from src.information_plane.mi_estimation import (
     MIEstimationConfig,
     estimate_mi_zx,
     estimate_mi_zx_cond_y,
 )
 from src.information_plane.nhsic import calc_nhsic_plane
+from src.models.toy_cnn import CNNModel
 from src.models.toy_mlp import MLPModel
 from src.neural_collapse import calc_neural_collapse_values
-
-
-# Dataset
-def get_dataloader(
-    cfg: DictConfig,
-) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
-    if cfg.dataset.name != "mnist":
-        msg = "Only MNIST dataset is currently supported."
-        raise NotImplementedError(msg)
-
-    full_train_dataset = torchvision.datasets.MNIST(
-        root="~/pytorch_datasets",
-        train=True,
-        transform=torchvision.transforms.ToTensor(),
-        download=True,
-    )
-    test_dataset = torchvision.datasets.MNIST(
-        root="~/pytorch_datasets",
-        train=False,
-        transform=torchvision.transforms.ToTensor(),
-        download=True,
-    )
-    train_dataset = torch.utils.data.Subset(
-        full_train_dataset,
-        range(cfg.train_size),
-    )
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=True,
-    )
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=cfg.batch_size,
-        shuffle=False,
-    )
-    return train_loader, test_loader
 
 
 # Helper functions
@@ -120,7 +84,11 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
         device = "cpu"
 
     # Dataset
-    train_loader, test_loader = get_dataloader(cfg)
+    train_loader, test_loader = get_dataloader(
+        dataset_name=cfg.dataset.name,
+        batch_size=cfg.batch_size,
+        train_size=cfg.train_size,
+    )
 
     # Model
     if cfg.model.name == "toy_mlp":
@@ -132,10 +100,22 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             last_layer_act=cfg.model.last_layer_act,
         )
         penultimate_layer = model.net[-2]  # Second to last layer
+        last_layer = model.net[-1]
+    elif cfg.model.name == "toy_cnn":
+        model = CNNModel(
+            input_size=cfg.dataset.size,
+            input_channels=cfg.dataset.num_channels,
+            num_classes=cfg.dataset.num_classes,
+        )
+        penultimate_layer = model.linear1  # (TODO: keitaroskmt) Fix this part to relu
+        last_layer = model.linear2
 
     with torch.no_grad():
-        for param in model.parameters():
-            param.data = param.data * cfg.init_scale
+        if cfg.model.name == "toy_cnn":
+            pass
+        else:
+            for param in model.parameters():
+                param.data = param.data * cfg.init_scale
 
     # Optimizer
     if cfg.optimizer.name == "adamw":
@@ -172,7 +152,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 weight_norm = sum(
                     torch.norm(param, p=2) for param in model.parameters()
                 ).item()
-                last_layer_norm = torch.norm(model.net[-1].weight, p=2).item()
+                last_layer_norm = torch.norm(last_layer.weight, p=2).item()
 
                 neural_collapse_values = calc_neural_collapse_values(
                     model,

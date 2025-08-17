@@ -11,7 +11,6 @@ class CNNModel(nn.Module):
         input_channels: int = 1,
         num_classes: int = 10,
         activation: str = "relu",
-        out_scale: float = 1.0,
     ) -> None:
         super().__init__()
 
@@ -39,7 +38,6 @@ class CNNModel(nn.Module):
 
         self.linear1 = nn.Linear(32 * num_channel_scale * (input_size // 2) ** 2, 128)
         self.linear2 = nn.Linear(128, num_classes)
-        self.log_alpha = nn.Parameter(torch.log(torch.tensor(out_scale)))
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.activation(self.conv1(x))
@@ -47,4 +45,4 @@ class CNNModel(nn.Module):
         x = self.pool(x)
         x = torch.flatten(x, start_dim=1)
         x = self.activation(self.linear1(x))
-        return self.linear2(x) * torch.exp(self.log_alpha)
+        return self.linear2(x)
