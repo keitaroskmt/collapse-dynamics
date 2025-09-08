@@ -108,14 +108,12 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             depth=cfg.model.depth,
             last_layer_act=cfg.model.last_layer_act,
         )
-        last_layer = model.net[-1]
     elif cfg.model.name == "toy_cnn":
         model = CNNModel(
             input_size=cfg.dataset.size,
             input_channels=cfg.dataset.num_channels,
             num_classes=cfg.dataset.num_classes,
         )
-        last_layer = model.linear2
 
     with torch.no_grad():
         if cfg.model.name == "toy_cnn":
@@ -159,70 +157,70 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 weight_norm = sum(
                     torch.norm(param, p=2) for param in model.parameters()
                 ).item()
-                last_layer_norm = torch.norm(last_layer.weight, p=2).item()
+                last_layer_norm = torch.norm(model.last_layer.weight, p=2).item()
 
-                neural_collapse_values = calc_neural_collapse_values(
+            neural_collapse_values = calc_neural_collapse_values(
+                model,
+                train_loader,
+                cfg.dataset.num_classes,
+                device,
+            )
+            if cfg.calc_nhsic:
+                nhsic_zx, nhsic_zy = calc_nhsic_plane(
                     model,
-                    train_loader,
+                    test_loader,
                     cfg.dataset.num_classes,
+                    10,
                     device,
                 )
-                if cfg.calc_nhsic:
-                    nhsic_zx, nhsic_zy = calc_nhsic_plane(
-                        model,
-                        test_loader,
-                        cfg.dataset.num_classes,
-                        10,
-                        device,
-                    )
-                    logger.info(
-                        "nHSIC(z; x): %.4f, nHSIC(z; y): %.4f",
-                        nhsic_zx,
-                        nhsic_zy,
-                    )
-                if cfg.calc_mi_estimation:
-                    mi_zx_estimation = estimate_mi_zx(
-                        model,
-                        test_loader,
-                        device,
-                        MIEstimationConfig(mode="mc"),
-                    )
-                    mi_zx_cond_y_estimation = estimate_mi_zx_cond_y(
-                        model,
-                        test_loader,
-                        cfg.dataset.num_classes,
-                        device,
-                        MIEstimationConfig(mode="mc"),
-                    )
-                    mi_zy_estimation = mi_zx_estimation - mi_zx_cond_y_estimation
-                    logger.info(
-                        "hat{I}(Z; X): %.4f, hat{I}(Z; Y): %.4f, hat{I}(Z; X | Y): %.4f",
-                        mi_zx_estimation,
-                        mi_zy_estimation,
-                        mi_zx_cond_y_estimation,
-                    )
-                    mi_zx_jensen_estimation = estimate_mi_zx(
-                        model,
-                        test_loader,
-                        device,
-                        MIEstimationConfig(mode="jensen"),
-                    )
-                    mi_zx_cond_y_jensen_estimation = estimate_mi_zx_cond_y(
-                        model,
-                        test_loader,
-                        cfg.dataset.num_classes,
-                        device,
-                        MIEstimationConfig(mode="jensen"),
-                    )
-                    mi_zy_jensen_estimation = (
-                        mi_zx_jensen_estimation - mi_zx_cond_y_jensen_estimation
-                    )
-                    logger.info(
-                        "check{I}(Z; X): %.4f, check{I}(Z; Y): %.4f, check{I}(Z; X | Y): %.4f",
-                        mi_zx_jensen_estimation,
-                        mi_zy_jensen_estimation,
-                        mi_zx_cond_y_jensen_estimation,
-                    )
+                logger.info(
+                    "nHSIC(z; x): %.4f, nHSIC(z; y): %.4f",
+                    nhsic_zx,
+                    nhsic_zy,
+                )
+            if cfg.calc_mi_estimation:
+                mi_zx_estimation = estimate_mi_zx(
+                    model,
+                    test_loader,
+                    device,
+                    MIEstimationConfig(mode="mc"),
+                )
+                mi_zx_cond_y_estimation = estimate_mi_zx_cond_y(
+                    model,
+                    test_loader,
+                    cfg.dataset.num_classes,
+                    device,
+                    MIEstimationConfig(mode="mc"),
+                )
+                mi_zy_estimation = mi_zx_estimation - mi_zx_cond_y_estimation
+                logger.info(
+                    "hat{I}(Z; X): %.4f, hat{I}(Z; Y): %.4f, hat{I}(Z; X | Y): %.4f",
+                    mi_zx_estimation,
+                    mi_zy_estimation,
+                    mi_zx_cond_y_estimation,
+                )
+                mi_zx_jensen_estimation = estimate_mi_zx(
+                    model,
+                    test_loader,
+                    device,
+                    MIEstimationConfig(mode="jensen"),
+                )
+                mi_zx_cond_y_jensen_estimation = estimate_mi_zx_cond_y(
+                    model,
+                    test_loader,
+                    cfg.dataset.num_classes,
+                    device,
+                    MIEstimationConfig(mode="jensen"),
+                )
+                mi_zy_jensen_estimation = (
+                    mi_zx_jensen_estimation - mi_zx_cond_y_jensen_estimation
+                )
+                logger.info(
+                    "check{I}(Z; X): %.4f, check{I}(Z; Y): %.4f, check{I}(Z; X | Y): %.4f",
+                    mi_zx_jensen_estimation,
+                    mi_zy_jensen_estimation,
+                    mi_zx_cond_y_jensen_estimation,
+                )
             if cfg.calc_mi_estimation_compression:
                 mi_zx_compression = estimate_mi_zx_compression(
                     model,

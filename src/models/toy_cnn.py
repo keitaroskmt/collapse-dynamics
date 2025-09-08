@@ -41,6 +41,10 @@ class CNNModel(nn.Module):
         self.linear1 = nn.Linear(32 * num_channel_scale * (input_size // 2) ** 2, 128)
         self.linear2 = nn.Linear(128, num_classes)
 
+    @property
+    def last_layer(self) -> nn.Module:
+        return self.linear2
+
     def forward(
         self,
         x: Tensor,

@@ -32,6 +32,10 @@ class MLPModel(nn.Module):
                 self.net.extend([nn.Linear(hidden_size, hidden_size), self.activation])
         self.net.append(nn.Linear(hidden_size, output_size))
 
+    @property
+    def last_layer(self) -> nn.Module:
+        return self.net[-1]
+
     def forward(
         self,
         x: Tensor,
