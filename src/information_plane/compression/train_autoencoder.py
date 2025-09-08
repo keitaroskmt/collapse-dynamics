@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 class MIEstimationCompressionConfig:
     """Configuration for mutual information estimation with compression."""
 
-    latent_dim: int = 8
+    latent_dim: int = 4
     num_epochs: int = 200  # Number of epochs for training the autoencoder.
     batch_size: int = 256  # Batch size for training the autoencoder.
     optimizer: str = "adam"  # Following the original code.
