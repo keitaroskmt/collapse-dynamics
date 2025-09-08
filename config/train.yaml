@@ -13,8 +13,10 @@ num_steps: 100000
 train_size: 1000
 batch_size: 100
 init_scale: 8.0
-calc_nhsic: true
-calc_mi_estimation: true
+calc_nhsic: false
+calc_mi_estimation: false
+calc_mi_estimation_compression: false
+save_model: false
 
 wandb:
   project: collapse_dynamics

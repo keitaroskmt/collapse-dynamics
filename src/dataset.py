@@ -74,5 +74,5 @@ class AutoencoderDataset(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index: int) -> tuple[Any, Any]:
-        x = self.dataset[index]
+        x = self.dataset[index][0]
         return (x, x)

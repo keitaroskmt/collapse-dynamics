@@ -18,6 +18,15 @@ from src.information_plane.mi_estimation import (
     estimate_mi_zx,
     estimate_mi_zx_cond_y,
 )
+from src.information_plane.mi_estimation_compression import (
+    MIEstimationCompressionConfig,
+)
+from src.information_plane.mi_estimation_compression import (
+    estimate_mi_zx as estimate_mi_zx_compression,
+)
+from src.information_plane.mi_estimation_compression import (
+    estimate_mi_zy as estimate_mi_zy_compression,
+)
 from src.information_plane.nhsic import calc_nhsic_plane
 from src.models.toy_cnn import CNNModel
 from src.models.toy_mlp import MLPModel
@@ -222,6 +231,27 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                         mi_zy_jensen_estimation,
                         mi_zx_cond_y_jensen_estimation,
                     )
+            if cfg.calc_mi_estimation_compression:
+                mi_zx_compression = estimate_mi_zx_compression(
+                    model,
+                    penultimate_layer,
+                    test_loader,
+                    device,
+                    cfg,
+                    MIEstimationCompressionConfig(),
+                )
+                mi_zy_compression = estimate_mi_zy_compression(
+                    model,
+                    penultimate_layer,
+                    test_loader,
+                    device,
+                    MIEstimationCompressionConfig(),
+                )
+                logger.info(
+                    "I(Z; X) estimated by comp: %.4f, I(Z; Y) estimated by comp: %.4f",
+                    mi_zx_compression,
+                    mi_zy_compression,
+                )
             wandb_log = {
                 "train_accuracy": train_acc,
                 "train_loss": train_loss,
@@ -251,6 +281,13 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                         "mi_zx_jensen_estimation": mi_zx_jensen_estimation,
                         "mi_zy_jensen_estimation": mi_zy_jensen_estimation,
                         "mi_zx_cond_y_jensen_estimation": mi_zx_cond_y_jensen_estimation,
+                    },
+                )
+            if cfg.calc_mi_estimation_compression:
+                wandb_log.update(
+                    {
+                        "mi_zx_compression": mi_zx_compression,
+                        "mi_zy_compression": mi_zy_compression,
                     },
                 )
             wandb.log(wandb_log)
