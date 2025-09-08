@@ -2,8 +2,6 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import Tensor, nn
 
-from src.representation import RepresentationHook
-
 
 class NormalizedHSIC:
     """Class for computing the normalized HSIC between two sets of representations.
@@ -54,9 +52,8 @@ class NormalizedHSIC:
         return torch.matmul(x, x.T)
 
 
-def calc_nhsic_plane(  # noqa: PLR0913
+def calc_nhsic_plane(
     model: nn.Module,
-    penultimate_layer: nn.Module,
     loader: torch.utils.data.DataLoader,
     num_classes: int,
     num_iter: int,
@@ -71,7 +68,6 @@ def calc_nhsic_plane(  # noqa: PLR0913
 
     """
     nhsic = NormalizedHSIC(device)
-    representation_hook = RepresentationHook(penultimate_layer)
 
     count = 0
     nhsic_zx = 0.0
@@ -81,13 +77,13 @@ def calc_nhsic_plane(  # noqa: PLR0913
         for data, target in loader:
             data, target = data.to(device), target.to(device)  # noqa: PLW2901
             with torch.no_grad():
-                model(data)
+                forward_result = model(data, return_repr=True)
             nhsic_zx += nhsic.calc_score(
-                representation_hook.get_representation(),
+                forward_result.representation,
                 data.view(data.size(0), -1),
             ).item()
             nhsic_zy += nhsic.calc_score(
-                representation_hook.get_representation(),
+                forward_result.representation,
                 F.one_hot(target, num_classes=num_classes).float(),
                 y_kernel="linear",
             ).item()

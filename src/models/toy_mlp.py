@@ -1,5 +1,7 @@
 from torch import Tensor, nn
 
+from src.models.utils import ForwardResult
+
 
 # Model
 class MLPModel(nn.Module):
@@ -30,7 +32,15 @@ class MLPModel(nn.Module):
                 self.net.extend([nn.Linear(hidden_size, hidden_size), self.activation])
         self.net.append(nn.Linear(hidden_size, output_size))
 
-    def forward(self, x: Tensor) -> Tensor:
-        for layer in self.net:
+    def forward(
+        self,
+        x: Tensor,
+        *,
+        return_repr: bool = False,
+    ) -> Tensor | ForwardResult:
+        for layer in self.net[:-1]:
             x = layer(x)
-        return x
+        out = self.net[-1](x)
+        if return_repr:
+            return ForwardResult(output=out, representation=x)
+        return out

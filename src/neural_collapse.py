@@ -3,8 +3,6 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 
-from src.representation import RepresentationHook
-
 
 @dataclass
 class NeuralCollapseValues:
@@ -18,13 +16,11 @@ class NeuralCollapseValues:
 
 def calc_neural_collapse_values(
     model: nn.Module,
-    penultimate_layer: nn.Module,
     loader: torch.utils.data.DataLoader,
     num_classes: int,
     device: torch.device,
 ) -> NeuralCollapseValues:
     """Calculate the neural collapse values for the output of the penultimate layer."""
-    representation_hook = RepresentationHook(penultimate_layer)
     model.eval()
 
     class_means = {}
@@ -32,12 +28,11 @@ def calc_neural_collapse_values(
     with torch.no_grad():
         for data, target in loader:
             data, target = data.to(device), target.to(device)  # noqa: PLW2901
-            model(data)
+            forward_result = model(data, return_repr=True)
 
-            reps = representation_hook.get_representation()
             for c in range(num_classes):
                 class_mask = target == c
-                class_reps = reps[class_mask]
+                class_reps = forward_result.representation[class_mask]
                 if c not in class_means:
                     class_means[c] = class_reps.sum(dim=0)
                     num_samples[c] += class_mask.sum().item()
@@ -50,12 +45,11 @@ def calc_neural_collapse_values(
     with torch.no_grad():
         for data, target in loader:
             data, target = data.to(device), target.to(device)  # noqa: PLW2901
-            model(data)
+            forward_result = model(data, return_repr=True)
 
-            reps = representation_hook.get_representation()
             for c in range(num_classes):
                 class_mask = target == c
-                class_reps = reps[class_mask]
+                class_reps = forward_result.representation[class_mask]
                 if class_reps.size(0) > 0:
                     within_class_variance += (
                         torch.norm(class_reps - class_means[c], p=2) ** 2

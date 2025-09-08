@@ -1,6 +1,8 @@
 import torch
 from torch import Tensor, nn
 
+from src.models.utils import ForwardResult
+
 
 class CNNModel(nn.Module):
     """A simple five layer CNN model."""
@@ -39,10 +41,18 @@ class CNNModel(nn.Module):
         self.linear1 = nn.Linear(32 * num_channel_scale * (input_size // 2) ** 2, 128)
         self.linear2 = nn.Linear(128, num_classes)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(
+        self,
+        x: Tensor,
+        *,
+        return_repr: bool = False,
+    ) -> Tensor | ForwardResult:
         x = self.activation(self.conv1(x))
         x = self.activation(self.conv2(x))
         x = self.pool(x)
         x = torch.flatten(x, start_dim=1)
         x = self.activation(self.linear1(x))
-        return self.linear2(x)
+        out = self.linear2(x)
+        if return_repr:
+            return ForwardResult(output=out, representation=x)
+        return out

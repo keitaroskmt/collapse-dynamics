@@ -9,8 +9,6 @@ import pytest
 import torch
 from torch import Tensor, nn
 
-from src.representation import RepresentationHook
-
 
 @dataclass
 class MIEstimationConfig:
@@ -20,13 +18,12 @@ class MIEstimationConfig:
     eval_size_cond_y: int = 1000
     ref_size: int = 400  # sz2
     batch_size: int = 100
-    std: float = 1e-3
+    std: float = 0.1
     mode: Literal["mc", "jensen"] = "mc"
 
 
 def estimate_mi_zx(
     model: nn.Module,
-    target_layer: nn.Module,
     loader: torch.utils.data.DataLoader,
     device: torch.device,
     mi_config: MIEstimationConfig = None,
@@ -35,15 +32,14 @@ def estimate_mi_zx(
     if mi_config is None:
         mi_config = MIEstimationConfig()
 
-    representation_hook = RepresentationHook(target_layer)
     model.eval()
 
     features = []
     with torch.no_grad():
         for data, _ in loader:
             data = data.to(device)  # noqa: PLW2901
-            model(data)
-            features.append(representation_hook.get_representation())
+            forward_result = model(data, return_repr=True)
+            features.append(forward_result.representation)
     features = torch.cat(features, dim=0)
 
     num_samples, _ = features.size()
@@ -68,9 +64,8 @@ def estimate_mi_zx(
     return (log_prob_numerator - log_prob_denominator).mean().item()
 
 
-def estimate_mi_zx_cond_y(  # noqa: PLR0913
+def estimate_mi_zx_cond_y(
     model: nn.Module,
-    target_layer: nn.Module,
     loader: torch.utils.data.DataLoader,
     num_classes: int,
     device: torch.device,
@@ -82,18 +77,16 @@ def estimate_mi_zx_cond_y(  # noqa: PLR0913
     """
     if mi_config is None:
         mi_config = MIEstimationConfig()
-
-    representation_hook = RepresentationHook(target_layer)
     model.eval()
 
     features = [[] for _ in range(num_classes)]
     with torch.no_grad():
         for data, target in loader:
             data, target = data.to(device), target.to(device)  # noqa: PLW2901
-            model(data)
+            forward_result = model(data, return_repr=True)
             for c in range(num_classes):
                 class_mask = target == c
-                features[c].append(representation_hook.get_representation()[class_mask])
+                features[c].append(forward_result.representation[class_mask])
     features = [torch.cat(x, dim=0) for x in features]
 
     rng = np.random.default_rng()

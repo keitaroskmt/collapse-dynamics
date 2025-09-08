@@ -108,7 +108,6 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             depth=cfg.model.depth,
             last_layer_act=cfg.model.last_layer_act,
         )
-        penultimate_layer = model.net[-2]  # Second to last layer
         last_layer = model.net[-1]
     elif cfg.model.name == "toy_cnn":
         model = CNNModel(
@@ -116,7 +115,6 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             input_channels=cfg.dataset.num_channels,
             num_classes=cfg.dataset.num_classes,
         )
-        penultimate_layer = model.linear1  # (TODO: keitaroskmt) Fix this part to relu
         last_layer = model.linear2
 
     with torch.no_grad():
@@ -165,7 +163,6 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
 
                 neural_collapse_values = calc_neural_collapse_values(
                     model,
-                    penultimate_layer,
                     train_loader,
                     cfg.dataset.num_classes,
                     device,
@@ -173,7 +170,6 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 if cfg.calc_nhsic:
                     nhsic_zx, nhsic_zy = calc_nhsic_plane(
                         model,
-                        penultimate_layer,
                         test_loader,
                         cfg.dataset.num_classes,
                         10,
@@ -187,14 +183,12 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 if cfg.calc_mi_estimation:
                     mi_zx_estimation = estimate_mi_zx(
                         model,
-                        penultimate_layer,
                         test_loader,
                         device,
                         MIEstimationConfig(mode="mc"),
                     )
                     mi_zx_cond_y_estimation = estimate_mi_zx_cond_y(
                         model,
-                        penultimate_layer,
                         test_loader,
                         cfg.dataset.num_classes,
                         device,
@@ -209,14 +203,12 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                     )
                     mi_zx_jensen_estimation = estimate_mi_zx(
                         model,
-                        penultimate_layer,
                         test_loader,
                         device,
                         MIEstimationConfig(mode="jensen"),
                     )
                     mi_zx_cond_y_jensen_estimation = estimate_mi_zx_cond_y(
                         model,
-                        penultimate_layer,
                         test_loader,
                         cfg.dataset.num_classes,
                         device,
@@ -234,7 +226,6 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             if cfg.calc_mi_estimation_compression:
                 mi_zx_compression = estimate_mi_zx_compression(
                     model,
-                    penultimate_layer,
                     test_loader,
                     device,
                     cfg,
@@ -242,7 +233,6 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 )
                 mi_zy_compression = estimate_mi_zy_compression(
                     model,
-                    penultimate_layer,
                     test_loader,
                     device,
                     MIEstimationCompressionConfig(),
