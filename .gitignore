@@ -16,3 +16,5 @@ job*.sh*
 *.err
 .vscode
 Omnigrok/
+*.pth
+*.pt

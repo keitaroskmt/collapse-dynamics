@@ -279,6 +279,20 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                     param["lr"],
                     param["weight_decay"],
                 )
+            # Save model
+            if cfg.save_model:
+                output_dir = (
+                    Path(__file__).parent.resolve()
+                    / "saved_models"
+                    / cfg.model.name
+                    / cfg.dataset.name
+                )
+                output_dir.mkdir(parents=True, exist_ok=True)
+                logger.info("Model output directory: %s", output_dir)
+                torch.save(
+                    model.state_dict(),
+                    output_dir / f"model_step_{time_step}.pt",
+                )
 
         # Train
         model.train()
