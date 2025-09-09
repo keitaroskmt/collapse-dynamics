@@ -116,11 +116,23 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
         )
 
     with torch.no_grad():
-        if cfg.model.name == "toy_cnn":
-            pass
-        else:
+        if cfg.model.name == "toy_mlp":
             for param in model.parameters():
                 param.data = param.data * cfg.init_scale
+        elif cfg.model.name == "toy_cnn":
+            if cfg.model.init_method == "linear":
+                for name, param in model.named_parameters():
+                    if name.startswith("linear"):
+                        param.data = param.data * cfg.init_scale
+            elif cfg.model.init_method == "zero_last_layer":
+                for param in model.parameters():
+                    param.data = param.data * cfg.init_scale
+                model.last_layer.weight.data.zero_()
+                if model.last_layer.bias is not None:
+                    model.last_layer.bias.data.zero_()
+            else:
+                msg = f"Initialization method {cfg.model.init_method} is not supported."
+                raise NotImplementedError(msg)
 
     # Optimizer
     if cfg.optimizer.name == "adamw":
