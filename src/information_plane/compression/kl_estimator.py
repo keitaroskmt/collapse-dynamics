@@ -511,13 +511,13 @@ class MIEstimator:
         h_x, h_x_err = x_entropy_estimator.estimate(x)
 
         # Empirical frequencies estimation.
-        frequencies = Counter(y)
+        frequencies = y.bincount()
         for y_ in frequencies:
             frequencies[y_] /= y.shape[0]
 
         # Conditional entropy estimation.
         h_x_mid_y = {}
-        for y_ in frequencies:
+        for y_ in range(len(frequencies)):
             x_mid_y = x[y_ == y]
 
             # For every value of y_, it is required to refit the estimator.
@@ -528,9 +528,11 @@ class MIEstimator:
             h_x_mid_y[y_] = x_mid_y_entropy_estimator.estimate(x_mid_y)
 
         # Final conditional entropy estimate.
-        cond_h_x = math.fsum([frequencies[y] * h_x_mid_y[y][0] for y in frequencies])
+        cond_h_x = math.fsum(
+            [frequencies[y] * h_x_mid_y[y][0] for y in range(len(frequencies))],
+        )
         cond_h_x_err = math.fsum(
-            [frequencies[y] * h_x_mid_y[y][1] for y in frequencies],
+            [frequencies[y] * h_x_mid_y[y][1] for y in range(len(frequencies))],
         )
 
         return (h_x - cond_h_x, h_x_err + cond_h_x_err)

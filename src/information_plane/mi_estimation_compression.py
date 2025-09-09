@@ -77,11 +77,11 @@ def estimate_mi_zy(
         features.numpy(),
     )
 
-    mi_zx_estimator = MIEstimator(
+    mi_zy_estimator = MIEstimator(
         y_is_discrete=True,
         entropy_estimator_params={
             "method": "KL",
             "functional_params": {"k_neighbors": 5},
         },
     )
-    return mi_zx_estimator.fit_estimate(z_compressed, targets)
+    return mi_zy_estimator.fit_estimate(z_compressed, targets)

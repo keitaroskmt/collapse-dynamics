@@ -20,6 +20,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "py-spy>=0.4.1",
     "ruff>=0.12.1",
 ]
 
