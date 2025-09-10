@@ -511,9 +511,7 @@ class MIEstimator:
         h_x, h_x_err = x_entropy_estimator.estimate(x)
 
         # Empirical frequencies estimation.
-        frequencies = y.bincount()
-        for y_ in frequencies:
-            frequencies[y_] /= y.shape[0]
+        frequencies = y.bincount() / y.shape[0]
 
         # Conditional entropy estimation.
         h_x_mid_y = {}
