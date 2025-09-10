@@ -226,7 +226,10 @@ class KLFunctional(Functional):
         for index in range(1, self.k_neighbors):
             psi[index] = psi[index - 1] + 1 / index
 
-        densities = np.exp(psi) / (unit_ball_volume * np.power(distances, dim))
+        densities = np.exp(psi) / (
+            unit_ball_volume
+            * np.clip(np.power(distances, dim), a_min=1e-12, a_max=None)
+        )
 
         # Normalization.
         densities /= n_samples - 1
