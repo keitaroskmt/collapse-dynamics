@@ -263,6 +263,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 "nc2_score": neural_collapse_values.nc2_score,
                 "within_class_variance": neural_collapse_values.within_class_variance,
                 "between_class_variance": neural_collapse_values.between_class_variance,
+                "scale_means": neural_collapse_values.scale_means,
                 "time_step": time_step,
             }
             if cfg.calc_nhsic:
@@ -297,7 +298,8 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 "weight_norm=%.4f, last_layer_norm=%.4f, "
                 "nc1_score=%.4f, nc2_score=%.4f, "
                 "within_class_variance=%.4f, "
-                "between_class_variance=%.4f, ",
+                "between_class_variance=%.4f, "
+                "scale_means=%.4f",
                 time_step,
                 train_acc,
                 train_loss,
@@ -309,6 +311,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 neural_collapse_values.nc2_score,
                 neural_collapse_values.within_class_variance,
                 neural_collapse_values.between_class_variance,
+                neural_collapse_values.scale_means,
             )
             for param in optimizer.param_groups:
                 logger.info(

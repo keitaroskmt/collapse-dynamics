@@ -12,6 +12,7 @@ class NeuralCollapseValues:
     nc2_score: float
     within_class_variance: float
     between_class_variance: float
+    scale_means: float
 
 
 def calc_neural_collapse_values(
@@ -25,6 +26,7 @@ def calc_neural_collapse_values(
 
     class_means = {}
     num_samples = [0 for _ in range(num_classes)]
+    scale_means = 0
     with torch.no_grad():
         for data, target in loader:
             data, target = data.to(device), target.to(device)  # noqa: PLW2901
@@ -39,7 +41,11 @@ def calc_neural_collapse_values(
                 else:
                     class_means[c] += class_reps.sum(dim=0)
                     num_samples[c] += class_mask.sum().item()
+            scale_means += (
+                torch.norm(forward_result.representation, p=2, dim=1).sum().item()
+            )
     class_means = {c: cm / num_samples[c] for c, cm in class_means.items()}
+    scale_means /= sum(num_samples)
 
     within_class_variance = 0.0
     with torch.no_grad():
@@ -86,4 +92,5 @@ def calc_neural_collapse_values(
         nc2_score=nc2_score,
         within_class_variance=within_class_variance.item(),
         between_class_variance=between_class_variance.item(),
+        scale_means=scale_means,
     )
