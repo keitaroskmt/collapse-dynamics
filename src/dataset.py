@@ -8,8 +8,8 @@ def get_dataset(
     dataset_name: str,
     train_size: int | None = None,
 ) -> tuple[Dataset, Dataset]:
-    if dataset_name != "mnist":
-        msg = "Only MNIST dataset is currently supported."
+    if dataset_name not in ["mnist", "cifar10"]:
+        msg = "Only MNIST and CIFAR10 datasets are currently supported."
         raise NotImplementedError(msg)
 
     if dataset_name == "mnist":
@@ -26,6 +26,28 @@ def get_dataset(
             download=True,
         )
         test_dataset = torchvision.datasets.MNIST(
+            root="~/pytorch_datasets",
+            train=False,
+            transform=image_transform,
+            download=True,
+        )
+    elif dataset_name == "cifar10":
+        image_transform = torchvision.transforms.Compose(
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(
+                    mean=(0.4914, 0.4822, 0.4465),
+                    std=(0.2023, 0.1994, 0.2010),
+                ),
+            ],
+        )
+        train_dataset = torchvision.datasets.CIFAR10(
+            root="~/pytorch_datasets",
+            train=True,
+            transform=image_transform,
+            download=True,
+        )
+        test_dataset = torchvision.datasets.CIFAR10(
             root="~/pytorch_datasets",
             train=False,
             transform=image_transform,

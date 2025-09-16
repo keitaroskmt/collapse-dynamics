@@ -102,7 +102,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
     # Model
     if cfg.model.name == "toy_mlp":
         model = MLPModel(
-            input_size=784,
+            input_size=cfg.dataset.size * cfg.dataset.size * cfg.dataset.num_channels,
             hidden_size=cfg.model.hidden_size,
             output_size=cfg.dataset.num_classes,
             depth=cfg.model.depth,

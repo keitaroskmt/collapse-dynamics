@@ -1,0 +1,6 @@
+# @package _global_
+dataset:
+  name: cifar10
+  size: 32
+  num_classes: 10
+  num_channels: 3

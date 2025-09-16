@@ -42,6 +42,8 @@ class MLPModel(nn.Module):
         *,
         return_repr: bool = False,
     ) -> Tensor | ForwardResult:
+        if x.dim() > 2:  # noqa: PLR2004
+            x = x.flatten(1)
         for layer in self.net[:-1]:
             x = layer(x)
         out = self.net[-1](x)
