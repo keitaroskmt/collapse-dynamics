@@ -28,8 +28,10 @@ from src.information_plane.mi_estimation_compression import (
     estimate_mi_zy as estimate_mi_zy_compression,
 )
 from src.information_plane.nhsic import calc_nhsic_plane
+from src.models.embedding import ImageEmbedding
 from src.models.toy_cnn import CNNModel
 from src.models.toy_mlp import MLPModel
+from src.models.transformer import OneLayerTransformer
 from src.neural_collapse import calc_neural_collapse_values
 
 
@@ -114,6 +116,21 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             input_channels=cfg.dataset.num_channels,
             num_classes=cfg.dataset.num_classes,
         )
+    elif cfg.model.name == "toy_transformer":
+        if cfg.dataset.name in ["mnist", "cifar10"]:
+            embedding = ImageEmbedding(
+                in_channels=cfg.dataset.num_channels,
+                hidden_size=cfg.model.hidden_size,
+            )
+        else:
+            msg = f"Dataset {cfg.dataset.name} is not supported for transformer."
+            raise NotImplementedError(msg)
+        model = OneLayerTransformer(
+            embedding=embedding,
+            hidden_size=cfg.model.hidden_size,
+            n_head=cfg.model.n_head,
+            output_size=cfg.dataset.num_classes,
+        )
 
     with torch.no_grad():
         if cfg.model.name == "toy_mlp":
@@ -133,6 +150,8 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             else:
                 msg = f"Initialization method {cfg.model.init_method} is not supported."
                 raise NotImplementedError(msg)
+        elif cfg.model.name == "toy_transformer":
+            model.reset_init(init_scale=cfg.init_scale)
 
     # Optimizer
     if cfg.optimizer.name == "adamw":
