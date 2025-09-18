@@ -212,7 +212,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                     model,
                     test_loader,
                     cfg.dataset.num_classes,
-                    10,
+                    cfg.nhsic_num_iter,
                     device,
                 )
                 logger.info(

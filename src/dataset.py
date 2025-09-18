@@ -81,7 +81,7 @@ def get_dataloader(
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
-        shuffle=False,
+        shuffle=True,
     )
     return train_loader, test_loader
 
