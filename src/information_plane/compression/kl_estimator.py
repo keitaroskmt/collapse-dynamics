@@ -305,7 +305,7 @@ class EntropyEstimator:
     def __init__(
         self,
         *,
-        rescale: bool = True,
+        rescale: bool = False,
         method: str = "KL",
         functional_params: dict | None = None,
     ) -> None:

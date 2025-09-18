@@ -15,6 +15,22 @@ from src.information_plane.compression.train_autoencoder import (
 )
 
 
+def normalize_data(x: torch.Tensor) -> torch.Tensor:
+    """Normalize data to have zero mean and unit variance.
+
+    Args:
+        x (torch.Tensor): Input data of shape (n_samples, n_features).
+
+    """
+    x = x - x.mean(dim=0, keepdim=True)
+    cov_matrix = torch.cov(x.T)
+    lower_matrix = torch.linalg.cholesky(
+        cov_matrix + 1e-6 * torch.eye(cov_matrix.size(0)),
+    )
+    # Solve lower_matrix @ z = x.T for z
+    return torch.linalg.solve_triangular(lower_matrix, x.T, upper=False).T
+
+
 def estimate_mi_zx(
     model: nn.Module,
     loader: torch.utils.data.DataLoader,
@@ -34,6 +50,7 @@ def estimate_mi_zx(
             data = data.to(device)  # noqa: PLW2901
             x_compressed.append(input_ae.encode(data))
     x_compressed = torch.cat(x_compressed, dim=0)
+    x_compressed = normalize_data(x_compressed)
 
     features = []
     with torch.no_grad():
@@ -45,6 +62,7 @@ def estimate_mi_zx(
     z_compressed = PCA(n_components=mi_config.latent_dim).fit_transform(
         features.numpy(),
     )
+    z_compressed = normalize_data(torch.from_numpy(z_compressed))
 
     mi_zx_estimator = MIEstimator(
         entropy_estimator_params={
@@ -76,6 +94,7 @@ def estimate_mi_zy(
     z_compressed = PCA(n_components=mi_config.latent_dim).fit_transform(
         features.numpy(),
     )
+    z_compressed = normalize_data(torch.from_numpy(z_compressed))
 
     mi_zy_estimator = MIEstimator(
         y_is_discrete=True,
