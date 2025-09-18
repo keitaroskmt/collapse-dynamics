@@ -29,6 +29,7 @@ from src.information_plane.mi_estimation_compression import (
 )
 from src.information_plane.nhsic import calc_nhsic_plane
 from src.models.embedding import ImageEmbedding
+from src.models.resnet import ResNet
 from src.models.toy_cnn import CNNModel
 from src.models.toy_mlp import MLPModel
 from src.models.transformer import OneLayerTransformer
@@ -131,6 +132,12 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             n_head=cfg.model.n_head,
             output_size=cfg.dataset.num_classes,
         )
+    elif cfg.model.name.startswith("resnet"):
+        model = ResNet(
+            model_name=cfg.model.name,
+            input_channels=cfg.dataset.num_channels,
+            output_size=cfg.dataset.num_classes,
+        )
 
     with torch.no_grad():
         if cfg.model.name == "toy_mlp":
@@ -152,6 +159,10 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
                 raise NotImplementedError(msg)
         elif cfg.model.name == "toy_transformer":
             model.reset_init(init_scale=cfg.init_scale)
+        elif cfg.model.name.startswith("resnet"):
+            for name, param in model.named_parameters():
+                if name.startswith("linear"):
+                    param.data = param.data * cfg.init_scale
 
     # Optimizer
     if cfg.optimizer.name == "adamw":
