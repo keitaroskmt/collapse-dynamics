@@ -84,6 +84,7 @@ def estimate_mi_zy(
     model.eval()
 
     targets = loader.dataset.targets
+    targets = torch.tensor(targets)
     features = []
     with torch.no_grad():
         for data, _ in loader:
