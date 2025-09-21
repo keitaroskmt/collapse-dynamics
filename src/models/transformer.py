@@ -33,7 +33,7 @@ class OneLayerTransformer(nn.Module):
 
     def reset_init(self, init_scale: float = 1.0) -> None:
         for name, m in self.named_modules():
-            if name.endswith(("linear1", "linear2")):
+            if name.endswith(("linear1", "linear2", "head")):
                 m.weight.data = m.weight.data * init_scale
                 m.bias.data = m.bias.data * init_scale
 
