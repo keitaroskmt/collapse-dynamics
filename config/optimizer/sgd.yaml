@@ -1,5 +1,0 @@
-# @package _global_
-optimizer:
-  name: sgd
-  learning_rate: 5e-6
-  weight_decay: 0.01

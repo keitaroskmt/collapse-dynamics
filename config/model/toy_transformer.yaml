@@ -1,5 +1,0 @@
-# @package _global_
-model:
-  name: toy_transformer
-  hidden_size: 128
-  n_head: 4

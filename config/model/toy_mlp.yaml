@@ -1,6 +1,0 @@
-# @package _global_
-model:
-  name: toy_mlp
-  hidden_size: 200
-  depth: 3
-  last_layer_act: true # Use activation in the last layer or not
