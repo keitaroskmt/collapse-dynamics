@@ -1,0 +1,4 @@
+# @package _global_
+dataset:
+  name: sst2
+  num_classes: 2

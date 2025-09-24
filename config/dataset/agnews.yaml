@@ -1,0 +1,4 @@
+# @package _global_
+dataset:
+  name: agnews
+  num_classes: 4

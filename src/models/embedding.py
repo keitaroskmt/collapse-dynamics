@@ -29,3 +29,22 @@ class ImageEmbedding(EmbeddingLayer):
         x = self.projection(x)  # (B, hidden_size, H / patch_size, W / patch_size)
         x = x.flatten(2)  # (B, hidden_size, num_patches)
         return x.transpose(1, 2)  # (B, num_patches, hidden_size)
+
+
+class TextEmbedding(EmbeddingLayer):
+    def __init__(
+        self,
+        vocab_size: int,
+        hidden_size: int = 128,
+        padding_idx: int | None = None,
+    ) -> None:
+        super().__init__()
+
+        self.embedding = nn.Embedding(
+            num_embeddings=vocab_size,
+            embedding_dim=hidden_size,
+            padding_idx=padding_idx,
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.embedding(x)  # (B, seq_len, hidden_size)

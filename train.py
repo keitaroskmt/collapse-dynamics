@@ -28,12 +28,13 @@ from src.information_plane.mi_estimation_compression import (
     estimate_mi_zy as estimate_mi_zy_compression,
 )
 from src.information_plane.nhsic import calc_nhsic_plane
-from src.models.embedding import ImageEmbedding
+from src.models.embedding import ImageEmbedding, TextEmbedding
 from src.models.resnet import ResNet
 from src.models.toy_cnn import CNNModel
 from src.models.toy_mlp import MLPModel
 from src.models.transformer import OneLayerTransformer
 from src.neural_collapse import calc_neural_collapse_values
+from src.text_dataset import get_dataloader as get_text_dataloader
 
 
 # Helper functions
@@ -96,11 +97,20 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
         device = "cpu"
 
     # Dataset
-    train_loader, test_loader = get_dataloader(
-        dataset_name=cfg.dataset.name,
-        batch_size=cfg.batch_size,
-        train_size=cfg.train_size,
-    )
+    img_dataset = ["mnist", "fashionmnist", "cifar10"]
+    text_dataset = ["sst2", "trec", "agnews"]
+    if cfg.dataset.name in img_dataset:
+        train_loader, test_loader = get_dataloader(
+            dataset_name=cfg.dataset.name,
+            batch_size=cfg.batch_size,
+            train_size=cfg.train_size,
+        )
+    elif cfg.dataset.name in text_dataset:
+        train_loader, test_loader, vocab_info = get_text_dataloader(
+            dataset_name=cfg.dataset.name,
+            batch_size=cfg.batch_size,
+            train_size=cfg.train_size,
+        )
 
     # Model
     if cfg.model.name == "toy_mlp":
@@ -118,10 +128,16 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             num_classes=cfg.dataset.num_classes,
         )
     elif cfg.model.name == "toy_transformer":
-        if cfg.dataset.name in ["mnist", "fashionmnist", "cifar10"]:
+        if cfg.dataset.name in img_dataset:
             embedding = ImageEmbedding(
                 in_channels=cfg.dataset.num_channels,
                 hidden_size=cfg.model.hidden_size,
+            )
+        elif cfg.dataset.name in text_dataset:
+            embedding = TextEmbedding(
+                vocab_size=vocab_info.vocab_size,
+                hidden_size=cfg.model.hidden_size,
+                padding_idx=vocab_info.pad_id,
             )
         else:
             msg = f"Dataset {cfg.dataset.name} is not supported for transformer."
@@ -131,6 +147,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             hidden_size=cfg.model.hidden_size,
             n_head=cfg.model.n_head,
             output_size=cfg.dataset.num_classes,
+            padding_idx=vocab_info.pad_id if cfg.dataset.name in text_dataset else None,
         )
     elif cfg.model.name.startswith("resnet"):
         model = ResNet(

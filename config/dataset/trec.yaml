@@ -1,0 +1,4 @@
+# @package _global_
+dataset:
+  name: trec
+  num_classes: 6
