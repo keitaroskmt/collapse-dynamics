@@ -118,7 +118,7 @@ def main(cfg: DictConfig) -> None:  # noqa: C901, PLR0915
             num_classes=cfg.dataset.num_classes,
         )
     elif cfg.model.name == "toy_transformer":
-        if cfg.dataset.name in ["mnist", "cifar10"]:
+        if cfg.dataset.name in ["mnist", "fashionmnist", "cifar10"]:
             embedding = ImageEmbedding(
                 in_channels=cfg.dataset.num_channels,
                 hidden_size=cfg.model.hidden_size,

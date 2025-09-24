@@ -8,8 +8,8 @@ def get_dataset(
     dataset_name: str,
     train_size: int | None = None,
 ) -> tuple[Dataset, Dataset]:
-    if dataset_name not in ["mnist", "cifar10"]:
-        msg = "Only MNIST and CIFAR10 datasets are currently supported."
+    if dataset_name not in ["mnist", "fashionmnist", "cifar10"]:
+        msg = "Only MNIST, FashionMNIST, and CIFAR10 datasets are currently supported."
         raise NotImplementedError(msg)
 
     if dataset_name == "mnist":
@@ -26,6 +26,25 @@ def get_dataset(
             download=True,
         )
         test_dataset = torchvision.datasets.MNIST(
+            root="~/pytorch_datasets",
+            train=False,
+            transform=image_transform,
+            download=True,
+        )
+    elif dataset_name == "fashionmnist":
+        image_transform = torchvision.transforms.Compose(
+            [
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(mean=(0.2860,), std=(0.3530,)),
+            ],
+        )
+        train_dataset = torchvision.datasets.FashionMNIST(
+            root="~/pytorch_datasets",
+            train=True,
+            transform=image_transform,
+            download=True,
+        )
+        test_dataset = torchvision.datasets.FashionMNIST(
             root="~/pytorch_datasets",
             train=False,
             transform=image_transform,
