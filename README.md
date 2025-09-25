@@ -3,7 +3,7 @@
 This repository contains the official implementation of the paper: [Explaining Grokking and Information Bottleneck through Neural Collapse Emergence]().
 
 <p align="center">
-    <img src="https://github.com/keitaroskmt/collapse-dynamics/tree/1c4dc4f2a61d17a5202ffdce2f8d841e6cecc882/img/figure1.png">
+    <img src="https://github.com/keitaroskmt/collapse-dynamics/blob/1c4dc4f2a61d17a5202ffdce2f8d841e6cecc882/img/figure1.png">
 <!p>
 
 ## Installation
