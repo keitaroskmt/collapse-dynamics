@@ -7,6 +7,7 @@ wheels/
 *.egg-info
 
 *.ipynb
+!visualize.ipynb
 .venv
 wandb/
 outputs/

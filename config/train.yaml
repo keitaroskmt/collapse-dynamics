@@ -14,7 +14,7 @@ train_size: 1000
 batch_size: 100
 init_scale: 8.0
 calc_nhsic: false
-nhsic_num_iter: 10
+nhsic_num_iter: 3
 calc_mi_estimation: false
 calc_mi_estimation_compression: false
 save_model: false
@@ -22,4 +22,4 @@ save_model: false
 wandb:
   project: collapse_dynamics
   entity: keitaroskmt
-  job_type: train_mnist
+  job_type: change_weight_decay
