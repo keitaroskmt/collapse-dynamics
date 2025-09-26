@@ -1,6 +1,6 @@
 # Explaining Grokking and Information Bottleneck through Neural Collapse Emergence
 
-This repository contains the official implementation of the paper: [Explaining Grokking and Information Bottleneck through Neural Collapse Emergence]().
+This repository contains the official implementation of the paper: [Explaining Grokking and Information Bottleneck through Neural Collapse Emergence](https://arxiv.org/abs/2509.20829).
 
 <p align="center">
     <img src="https://github.com/keitaroskmt/collapse-dynamics/blob/1c4dc4f2a61d17a5202ffdce2f8d841e6cecc882/img/figure1.png">
@@ -49,5 +49,10 @@ After training, you can plot the results by running `visualize.ipynb`.
 If you find our work useful for your research, please cite using this BibTeX:
 
 ```BibTeX
-xxx
+@article{sakamoto2025explaining,
+  title={Explaining Grokking and Information Bottleneck through Neural Collapse Emergence},
+  author={Sakamoto, Keitaro and Sato, Issei},
+  journal={arXiv preprint arXiv:2509.20829},
+  year={2025}
+}
 ```
